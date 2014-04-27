@@ -1,10 +1,13 @@
 {
-    "name": "F-type",
-    "launch_path": "/index.html",
-    "orientation": ["landscape"],
-    "icons": {
-        "90": "/assets/img/icone_90.png",
-        "60": "/assets/img/icone_60.png"
-    },
-    "fullscreen": true
+  "name": "F-type",
+  "launch_path": "/index.html",
+  "orientation": [
+    "landscape"
+  ],
+  "icons": {
+    "60": "/assets/img/icone_60.png",
+    "90": "/assets/img/icone_90.png",
+    "128": "/assets/img/icone_128.png"
+  },
+  "fullscreen": true
 }
