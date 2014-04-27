@@ -41,6 +41,7 @@ GameScreen.prototype = {
         game.load.spritesheet('thruster', 'assets/img/sprite_thruster.png', 14, 34);
 
 
+
     },
     create: function(){
 
@@ -204,9 +205,11 @@ LoseScreen.prototype = {
 
     },
     create: function(){
+        var logo = game.add.sprite(20, game.world.centerY-155, 'logo');
         var textLose = game.add.text(90, 180, 'You lose!', { fill: '#ffffff',fontSize:30});
         var textScore = game.add.text(65, 260, 'Your score: '+score, { fill: '#ffffff',fontSize:30});
-        var textStart = game.add.text(65, 340, 'Restart game', { fill: '#ffffff',fontSize:30});
+        var textStart = game.add.text(65, 340, 'Restart game', { fill: '#ff6600',fontSize:30});
+
 
         if(score > sessionStorage.getItem("highscore")){
             sessionStorage.setItem("highscore", score);
@@ -232,13 +235,25 @@ MainMenu.prototype = {
     preload: function() { 
         /* download assets code here */
         game.load.image('logo', 'assets/img/logo_f-type.png');
+        game.load.audio('music', ['assets/sounds/ride_of_the_valkyries.mp3']);
+        game.load.audio('sfx', [ 'assets/sounds/explosion.mp3']);
+        game.load.audio('laser-sfx', ['assets/sounds/hit.mp3']);
         
     ;},
     create:  function() {
         // adiciona o background
         //game.add.sprite(0, 0, 'logo');
+        music = game.add.audio('music');
+        // inicializa o sistema de audio
+        fx = game.add.audio('sfx');
+        fxLaser = game.add.audio('laser-sfx');
+
+        //adiciona o marcador de som
+        fx.addMarker('explosion-sound', 1, 1.0);
+        fxLaser.addMarker('laser-sound', 1, 1.0);
+        music.play();
         var logo = game.add.sprite(20, game.world.centerY-65, 'logo');
-        var textStart = game.add.text(120, 260, 'Start', { fill: '#ffffff',fontSize:30});
+        var textStart = game.add.text(120, 260, 'Start', { fill: '#ff6600',fontSize:30});
         textStart.inputEnabled = true;
         textStart.events.onInputDown.add(changeStateToGameScreen, this);
 
@@ -268,7 +283,7 @@ function createBullet() {
     var chance = Math.random() * 100;
 
     tiro = bullets.create(x, y, 'bullet');
-
+    fxLaser.play('laser-sound');
 
     //tiro.angle = game.rnd.angle();
     //tiro.body.mass = 20;
@@ -341,6 +356,7 @@ function atingiuInimigo(inEnemy, inBullet) {
     anim = explosion.animations.add('explosion');
     explosion.animations.play('explosion', 40, false);
     anim.onComplete.add(animationStopped, this);
+    fx.play('explosion-sound');
 
 
 
