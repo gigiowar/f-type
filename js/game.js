@@ -3,10 +3,11 @@
 var game = new Phaser.Game(320, 480, Phaser.CANVAS, 'game', {create: gameDefinitions, update: gameLoop});
 
 var player;
+var enemyChrome;
 var timer = 0;
 var total = 0;
 var score = 0;
-var frutas;
+var bullets;
 var estragadas;
 var scoreText;
 
@@ -23,10 +24,12 @@ function gameLoop() {
 var GameScreen = function(game){}
 GameScreen.prototype = {
     preload: function(){
-        game.load.image('cenario', 'assets/pics/cenario.png');
-        game.load.image('fruta_boa', 'assets/pics/fruta_boa.png');
-        game.load.image('fruta_ruim', 'assets/pics/fruta_ruim.png');
-        game.load.image('ship', 'assets/img/ship.gif');
+        game.load.image('cenario', 'assets/img/bg_nebula.jpg');
+        game.load.image('bgstars1', 'assets/img/bg_stars1.png');
+        game.load.image('bgstars2', 'assets/img/bg_stars2.png');
+        game.load.image('bullet', 'assets/img/ship.gif');
+        //game.load.image('fruta_ruim', 'assets/pics/fruta_ruim.png');
+        game.load.image('ship', 'assets/img/ship.png');
 
     },
     create: function(){
@@ -35,7 +38,10 @@ GameScreen.prototype = {
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
     // adiciona o background
-    game.add.sprite(0, 0, 'cenario');
+    //bgNebula = game.add.sprite(0, -620, 'cenario');
+    bgStars1 = game.add.sprite(0, 0, 'bgstars1');
+    bgStars2 = game.add.sprite(0, -200, 'bgstars2');
+    bgStars3 = game.add.sprite(0, -800, 'bgstars2');
 
     // Adiciona o jogador
     player = game.add.sprite(130, 380, 'ship');           
@@ -43,10 +49,16 @@ GameScreen.prototype = {
     player.enableBody = true;
     player.body.collideWorldBounds = true;
 
-    // Adiciona as frutas
-    frutas = game.add.group();
-    frutas.enableBody = true;
-    frutas.physicsBodyType = Phaser.Physics.ARCADE;
+    //Adiciona o inimigo
+    enemyChrome = game.add.group(); 
+    enemyChrome.enableBody = true;
+    enemyChrome.physicsBodyType = Phaser.Physics.ARCADE;
+    createEnemy();
+
+    // Adiciona os tiros
+    bullets = game.add.group();
+    bullets.enableBody = true;
+    bullets.physicsBodyType = Phaser.Physics.ARCADE;
 
     // Adiciona as estragadas
     estragadas = game.add.group();
@@ -59,8 +71,21 @@ GameScreen.prototype = {
     },
     update: function(){
 
- //  Allow dragging - the 'true' parameter will make the sprite snap to the center
+    
+    //moveBackground(this.background2);
 
+    var moveBackground = function(background,velocity,position,resetPosition) {
+      if (background.y > resetPosition) {
+        background.y = position;
+        background.y += velocity;
+      } else {}
+        background.y += velocity;
+    }
+    //moveBackground(bgNebula, 0.2, -1110, 600);
+    moveBackground(bgStars1, 0.6, -700, 600);
+    moveBackground(bgStars2, 1.5, -1000, 600);
+    moveBackground(bgStars3, 1.5, -1000, 600);
+    
     /*
     if (game.input.mousePointer.isDown){
         if(game.input.mousePointer.worldX  > 270){
@@ -84,24 +109,10 @@ GameScreen.prototype = {
 
     //Input touch
     if (game.input.pointer1.isDown) {
-      if (game.input.pointer1.worldX > 270) {
-           //player.body.velocity.x = 150;
-            game.physics.arcade.moveToPointer(player, 400);
 
-      }
-      if (game.input.pointer1.worldX <= 270) {
-           //player.body.velocity.x = -150;
-           game.physics.arcade.moveToPointer(player, 400);
-      }
-      if (game.input.pointer1.worldY > 420) {
-           //player.body.velocity.x = 150;
-            game.physics.arcade.moveToPointer(player, 400);
+       //player.body.velocity.x = 150;
+        game.physics.arcade.moveToPointer(player, 400);
 
-      }
-      if (game.input.pointer1.worldY <= 420) {
-           //player.body.velocity.x = -150;
-           game.physics.arcade.moveToPointer(player, 400);
-      }
       if (Phaser.Rectangle.contains(player.body, game.input.x, game.input.y))
         {
             player.body.velocity.setTo(0, 0);
@@ -116,17 +127,17 @@ GameScreen.prototype = {
 
     if (total < 50  && game.time.now > timer)
     {
-        criarNovaFruta();
+        createBullet();
     }
 
     // Checar colisões
 
-    game.physics.arcade.collide(player, frutas, pegouFruta);
+    game.physics.arcade.collide(enemyChrome, bullets, atingiuInimigo);
     game.physics.arcade.collide(player, estragadas, pegouEstragada);
 
     // Destruir frutas fora da tela
-    frutas.forEach(destruirFrutasForaDaTela, this);
-    estragadas.forEach(destruirFrutasForaDaTela, this);
+    bullets.forEach(destruirObjetoForaDaTela, this);
+    estragadas.forEach(destruirObjetoForaDaTela, this);
 
     }
 }
@@ -136,7 +147,7 @@ LoseScreen.prototype = {
 
     },
     create: function(){
-
+        var textStart = game.add.text(120, 260, 'You lose!', { fill: '#ffffff',fontSize:30});
     },
     update: function(){
 
@@ -156,52 +167,69 @@ MainMenu.prototype = {
         var logo = game.add.sprite(20, game.world.centerY-65, 'logo');
         var textStart = game.add.text(120, 260, 'Start', { fill: '#ffffff',fontSize:30});
         textStart.inputEnabled = true;
-        textStart.events.onInputDown.add(changeState, this);
+        textStart.events.onInputDown.add(changeStateToGameScreen, this);
 
     ;},
     update:  function() {/* update movements, collisions, score here */ ;}
 }
-game.state.add('gameScreen' , GameScreen);
+
 game.state.add('menu' , MainMenu);
+game.state.add('gameScreen' , GameScreen);
+game.state.add('loseScreen' , LoseScreen);
 //pauseKey = game.input.keyboard.addKey(Phaser.Keyboard.P);
 game.state.start('menu');
 
-function changeState(){
-    game.state.start('gameScreen');
+function changeStateToGameScreen(){
+    game.state.start("gameScreen");
 }
 
-function criarNovaFruta() {
+function createBullet() {
 
-    var x = game.world.randomX;
-    var fruta;
+    var x = player.x;
+    var y = player.y-20;
+    var tiro;
     var chance = Math.random() * 100;
 
     if (chance < 60) {
-        fruta = frutas.create(x, -20, 'fruta_boa');
+        tiro = bullets.create(x, y, 'bullet');
     } else {
-        fruta = estragadas.create(x, -40, 'fruta_ruim');
+        tiro = estragadas.create(x, -40, 'fruta_ruim');
     }
 
-    fruta.angle = game.rnd.angle();
-    fruta.body.mass = 20;
+    //tiro.angle = game.rnd.angle();
+    //tiro.body.mass = 20;
 
-    game.physics.arcade.accelerateToXY(fruta, x, 400, 100);
+    game.physics.arcade.accelerateToXY(tiro, x, -50, 100);
 
     total++;
     timer = game.time.now + 2000;
 }
+function createEnemy(){
+    var x = game.world.randomX;
+    var y = 0;
 
-function pegouFruta(inPlayer, inFruta) {
-    console.log("pegou!!!!");
+
+    enemyChrome.create(x, y, 'ship');
+  
+
+    //tiro.angle = game.rnd.angle();
+    //tiro.body.mass = 20;
+
+    //game.physics.arcade.accelerateToXY(tiro, x, -50, 100);
+}
+
+function atingiuInimigo(inEnemy, inBullet) {
+    console.log("acertou!!!!");
     total--;
     score++;
 
     scoreText.text = 'Score: ' + score;
 
-    inPlayer.body.velocity.y = -20;
+    //inEnemy.body.velocity.y = -20;
 
-    inFruta.kill();
-
+    inEnemy.kill();
+    inBullet.kill();
+    createEnemy();
 }
 
 function pegouEstragada(inPlayer, inFruta) {
@@ -217,9 +245,9 @@ function pegouEstragada(inPlayer, inFruta) {
 
 }
 
-function destruirFrutasForaDaTela(fruta) {
-    if (fruta.world.y > 320) {
-        fruta.kill();
+function destruirObjetoForaDaTela(objeto) {
+    if (objeto.world.y > 480 || objeto.world.y < 0) {
+        objeto.kill();
         total--;
     }
 }
