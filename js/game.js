@@ -34,6 +34,8 @@ GameScreen.prototype = {
         game.load.image('enemyBullet', 'assets/img/shot_enm.png');
         game.load.image('ship', 'assets/img/ship.png');
         game.load.image('enemyOpera','assets/img/enm_op.png');
+        game.load.spritesheet('thruster', 'assets/img/sprite_thruster.png', 14, 34);
+
 
     },
     create: function(){
@@ -52,6 +54,12 @@ GameScreen.prototype = {
     game.physics.arcade.enable(player);
     player.enableBody = true;
     player.body.collideWorldBounds = true;
+
+    // Adiciona o Trhuster da nave
+    thruster = game.add.sprite(player.x+18,player.y+65, 'thruster');
+    game.physics.arcade.enable(thruster);
+    thruster.animations.add('thrust');
+    thruster.animations.play('thrust', 20, true);
 
     //Adiciona o inimigo
     enemyOpera = game.add.group(); 
@@ -80,8 +88,7 @@ GameScreen.prototype = {
     },
     update: function(){
 
-    
-    //moveBackground(this.background2);
+
 
     var moveBackground = function(background,velocity,position,resetPosition) {
       if (background.y > resetPosition) {
@@ -95,26 +102,23 @@ GameScreen.prototype = {
     moveBackground(bgStars2, 1.5, -1000, 600);
     moveBackground(bgStars3, 1.5, -1000, 600);
     
-    /*
-    if (game.input.mousePointer.isDown){
-        if(game.input.mousePointer.worldX  > 270){
-            console.log('hey');
-            game.physics.arcade.moveToPointer(player, 400);
-        }
-        if (game.input.mousePointer.worldX <= 270) {
-           console.log('hey-1');
-           game.physics.arcade.moveToPointer(player, 400);
-        }
-        if (game.input.mousePointer.worldY > 420) {
-           console.log('hey-2');
-           game.physics.arcade.moveToPointer(player, 400);
-        }
-        if (game.input.mousePointer.worldY <= 420) {
-           console.log('hey-3');
-           game.physics.arcade.moveToPointer(player, 400);
-        }
-
-    }*/
+    //Input keyboard
+    if (game.input.keyboard.isDown(Phaser.Keyboard.LEFT))
+    {
+        player.x -= 5;
+    }
+    if (game.input.keyboard.isDown(Phaser.Keyboard.RIGHT))
+    {
+        player.x += 5;
+    }
+    if (game.input.keyboard.isDown(Phaser.Keyboard.UP))
+    {
+        player.y -= 5;
+    }
+    if (game.input.keyboard.isDown(Phaser.Keyboard.DOWN))
+    {
+        player.y += 5;
+    }
 
     //Input touch
     if (game.input.pointer1.isDown) {
@@ -151,6 +155,10 @@ GameScreen.prototype = {
         createEnemyBullet();
     
     }
+    //Move Thruster
+    //var thruster = game.add.sprite(player.x+18,player.y+65, 'thruster');
+    thruster.x = player.x+18;
+    thruster.y = player.y+65;
 
     // Checar colisões
 
@@ -173,7 +181,20 @@ LoseScreen.prototype = {
     },
     create: function(){
         var textLose = game.add.text(90, 180, 'You lose!', { fill: '#ffffff',fontSize:30});
-        var textStart = game.add.text(65, 260, 'Restart game', { fill: '#ffffff',fontSize:30});
+        var textScore = game.add.text(65, 260, 'Your score: '+score, { fill: '#ffffff',fontSize:30});
+        var textStart = game.add.text(65, 340, 'Restart game', { fill: '#ffffff',fontSize:30});
+
+        if(score > sessionStorage.getItem("highscore")){
+            sessionStorage.setItem("highscore", score);
+        }
+        // Save data to the current session's store
+        
+
+        // Access some stored data
+        var textHighScore = game.add.text(65, 300, 'Highscore: '+sessionStorage.getItem("highscore"), { fill: '#ffffff',fontSize:30});
+        
+        score = 0;
+
         textStart.inputEnabled = true;
         textStart.events.onInputDown.add(changeStateToGameScreen, this);
     },
@@ -237,12 +258,10 @@ function createBullet() {
     timer = game.time.now + 500;
 }
 function createEnemyBullet(){
-    console.log('enemy-shoot');
+
     var x = enemy.x+20;
     var y = enemy.y+100;
     var enemyTiro;
-
-    console.log(enemy.y-20);
 
     enemyTiro = enemyBullets.create(x, y, 'enemyBullet');
 
