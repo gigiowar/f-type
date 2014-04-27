@@ -34,6 +34,10 @@ GameScreen.prototype = {
         game.load.image('enemyBullet', 'assets/img/shot_enm.png');
         game.load.image('ship', 'assets/img/ship.png');
         game.load.image('enemyOpera','assets/img/enm_op.png');
+        game.load.image('enemyIe','assets/img/enm_ie.png');
+        game.load.image('enemySafari','assets/img/enm_sa.png');
+        game.load.spritesheet('enemyChrome', 'assets/img/sprite_enm_cr.png', 60, 60);
+        game.load.spritesheet('explosion', 'assets/img/sprite_explosion.png', 80, 80);
         game.load.spritesheet('thruster', 'assets/img/sprite_thruster.png', 14, 34);
 
 
@@ -55,17 +59,36 @@ GameScreen.prototype = {
     player.enableBody = true;
     player.body.collideWorldBounds = true;
 
-    // Adiciona o Trhuster da nave
-    thruster = game.add.sprite(player.x+18,player.y+65, 'thruster');
-    game.physics.arcade.enable(thruster);
-    thruster.animations.add('thrust');
-    thruster.animations.play('thrust', 20, true);
-
-    //Adiciona o inimigo
+    //Adiciona os inimigos
     enemyOpera = game.add.group(); 
     enemyOpera.enableBody = true;
     enemyOpera.physicsBodyType = Phaser.Physics.ARCADE;
+    enemyIe = game.add.group(); 
+    enemyIe.enableBody = true;
+    enemyIe.physicsBodyType = Phaser.Physics.ARCADE;
+    enemySafari = game.add.group(); 
+    enemySafari.enableBody = true;
+    enemySafari.physicsBodyType = Phaser.Physics.ARCADE;
+    enemyChrome = game.add.group();
+    enemyChrome.enableBody = true;
+    enemyChrome.physicsBodyType = Phaser.Physics.ARCADE; 
     createEnemy();
+
+    // Animations
+    // Adiciona o Trhuster da nave
+    thruster = game.add.sprite(player.x+18,player.y+65, 'thruster');
+    thruster.animations.add('thrust');
+    thruster.animations.play('thrust', 20, true);
+    //Animation of enemyChrome
+    //enemyChrome.animations.add('rotate');
+    //enemyChrome.animations.play('rotate', 20, true);
+    //  These are the frame names for the octopus animation. We use the generateFrames function to help create the array.
+    var frameNames = Phaser.Animation.generateFrameNames('enemyChrome', 0, 24, '', 4);
+    enemyChrome.callAll('animations.add', 'animations', 'rotate', frameNames, 30, true, false);
+    //  Here we just say 'play the swim animation', this time the 'play' method exists on the child itself, so we can set the context to null.
+    enemyChrome.callAll('play', null, 'rotate');
+
+
 
     // Adiciona os tiros
     bullets = game.add.group();
@@ -87,8 +110,6 @@ GameScreen.prototype = {
 
     },
     update: function(){
-
-
 
     var moveBackground = function(background,velocity,position,resetPosition) {
       if (background.y > resetPosition) {
@@ -161,7 +182,10 @@ GameScreen.prototype = {
     thruster.y = player.y+65;
 
     // Checar colisões
-
+    game.physics.arcade.collide(enemySafari, bullets, atingiuInimigo);
+    game.physics.arcade.collide(enemySafari, player, morreu);
+    game.physics.arcade.collide(enemyIe, bullets, atingiuInimigo);
+    game.physics.arcade.collide(enemyIe, player, morreu);
     game.physics.arcade.collide(enemyOpera, bullets, atingiuInimigo);
     game.physics.arcade.collide(enemyOpera, player, morreu);
     game.physics.arcade.collide(player, enemyBullets, morreu);
@@ -272,11 +296,24 @@ function createEnemyBullet(){
 }
 
 function createEnemy(){
-    var x = game.world.randomX;
+    var x = Math.random() * 270;
     var y = -100;
+    var enemyNumber = Math.random() * 3;
+    //var enemyNumber = 3;
 
-
-    enemy = enemyOpera.create(x, y, 'enemyOpera');
+    if(parseInt(enemyNumber) == 0){
+        enemy = enemyOpera.create(x, y, 'enemyOpera');
+    }
+    if(parseInt(enemyNumber) == 1){
+        enemy = enemyIe.create(x, y, 'enemyIe');
+    }
+    if(parseInt(enemyNumber) == 2){
+        enemy = enemySafari.create(x, y, 'enemySafari');
+    }
+    if(parseInt(enemyNumber) == 3){
+        enemy = enemySafari.create(x, y, 'enemySafari');
+    }
+    
   
 
     //tiro.angle = game.rnd.angle();
@@ -293,11 +330,27 @@ function atingiuInimigo(inEnemy, inBullet) {
     score++;
 
     scoreText.text = 'Score: ' + score;
-
     //inEnemy.body.velocity.y = -20;
+    //explosion = game.add.sprite(inEnemy.x,inEnemy.y, 'explosion');
+    //explosion.animations.add('explosion');
+    //explosion.animations.play('explosion', 20, false);
+
+    //setInterval(explosion.kill(),3000);
+   
+    explosion = game.add.sprite(inEnemy.x,inEnemy.y, 'explosion');
+    anim = explosion.animations.add('explosion');
+    explosion.animations.play('explosion', 40, false);
+    anim.onComplete.add(animationStopped, this);
+
+
 
     inEnemy.kill();
     inBullet.kill();
+}
+
+function animationStopped(){
+    explosion.kill();
+
 }
 
 function morreu(inEnemy, inPlayer) {
@@ -318,4 +371,7 @@ function destruirObjetoForaDaTela(objeto) {
         objeto.kill();
         total--;
     }
+
+
+
 }
