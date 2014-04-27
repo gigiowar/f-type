@@ -6,9 +6,11 @@ var player;
 var enemyChrome;
 var timer = 0;
 var timerEnemy = 0;
+var timerBulletEnemy = 0;
 var total = 0;
 var score = 0;
 var bullets;
+var enemyBullets;
 var estragadas;
 var scoreText;
 
@@ -29,6 +31,7 @@ GameScreen.prototype = {
         game.load.image('bgstars1', 'assets/img/bg_stars1.png');
         game.load.image('bgstars2', 'assets/img/bg_stars2.png');
         game.load.image('bullet', 'assets/img/shot_std.png');
+        game.load.image('enemyBullet', 'assets/img/shot_enm.png');
         game.load.image('ship', 'assets/img/ship.png');
         game.load.image('enemyOpera','assets/img/enm_op.png');
 
@@ -60,6 +63,11 @@ GameScreen.prototype = {
     bullets = game.add.group();
     bullets.enableBody = true;
     bullets.physicsBodyType = Phaser.Physics.ARCADE;
+
+    // Adiciona os tiros do inimigo
+    enemyBullets = game.add.group();
+    enemyBullets.enableBody = true;
+    enemyBullets.physicsBodyType = Phaser.Physics.ARCADE;
 
     // Adiciona as estragadas
     estragadas = game.add.group();
@@ -138,14 +146,23 @@ GameScreen.prototype = {
         createBullet();
     }
 
+    if (total < 50  && game.time.now > timerBulletEnemy)
+    {
+        createEnemyBullet();
+    
+    }
+
     // Checar colisões
 
     game.physics.arcade.collide(enemyOpera, bullets, atingiuInimigo);
     game.physics.arcade.collide(enemyOpera, player, morreu);
+    game.physics.arcade.collide(player, enemyBullets, morreu);
 
-    // Destruir frutas fora da tela
+
+    // Destruir objetos fora da tela
     bullets.forEach(destruirObjetoForaDaTela, this);
     estragadas.forEach(destruirObjetoForaDaTela, this);
+    enemyBullets.forEach(destruirObjetoForaDaTela, this);
 
     }
 }
@@ -218,6 +235,21 @@ function createBullet() {
 
     total++;
     timer = game.time.now + 500;
+}
+function createEnemyBullet(){
+    console.log('enemy-shoot');
+    var x = enemy.x+20;
+    var y = enemy.y+100;
+    var enemyTiro;
+
+    console.log(enemy.y-20);
+
+    enemyTiro = enemyBullets.create(x, y, 'enemyBullet');
+
+    game.physics.arcade.moveToXY(enemyTiro, x, 500, 200);
+
+    timerBulletEnemy = game.time.now + 1200;
+
 }
 
 function createEnemy(){
