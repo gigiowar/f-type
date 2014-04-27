@@ -5,6 +5,7 @@ var game = new Phaser.Game(320, 480, Phaser.CANVAS, 'game', {create: gameDefinit
 var player;
 var enemyChrome;
 var timer = 0;
+var timerEnemy = 0;
 var total = 0;
 var score = 0;
 var bullets;
@@ -27,9 +28,9 @@ GameScreen.prototype = {
         game.load.image('cenario', 'assets/img/bg_nebula.jpg');
         game.load.image('bgstars1', 'assets/img/bg_stars1.png');
         game.load.image('bgstars2', 'assets/img/bg_stars2.png');
-        game.load.image('bullet', 'assets/img/ship.gif');
-        //game.load.image('fruta_ruim', 'assets/pics/fruta_ruim.png');
+        game.load.image('bullet', 'assets/img/shot_std.png');
         game.load.image('ship', 'assets/img/ship.png');
+        game.load.image('enemyOpera','assets/img/enm_op.png');
 
     },
     create: function(){
@@ -50,9 +51,9 @@ GameScreen.prototype = {
     player.body.collideWorldBounds = true;
 
     //Adiciona o inimigo
-    enemyChrome = game.add.group(); 
-    enemyChrome.enableBody = true;
-    enemyChrome.physicsBodyType = Phaser.Physics.ARCADE;
+    enemyOpera = game.add.group(); 
+    enemyOpera.enableBody = true;
+    enemyOpera.physicsBodyType = Phaser.Physics.ARCADE;
     createEnemy();
 
     // Adiciona os tiros
@@ -123,6 +124,13 @@ GameScreen.prototype = {
         player.body.velocity.setTo(0, 0);
     }
 
+    // Criar mais inimigos
+
+    if (total < 50  && game.time.now > timerEnemy)
+    {
+        createEnemy();;
+    }
+    
     // Criar mais frutinhas
 
     if (total < 50  && game.time.now > timer)
@@ -132,8 +140,8 @@ GameScreen.prototype = {
 
     // Checar colisões
 
-    game.physics.arcade.collide(enemyChrome, bullets, atingiuInimigo);
-    game.physics.arcade.collide(player, estragadas, pegouEstragada);
+    game.physics.arcade.collide(enemyOpera, bullets, atingiuInimigo);
+    game.physics.arcade.collide(enemyOpera, player, morreu);
 
     // Destruir frutas fora da tela
     bullets.forEach(destruirObjetoForaDaTela, this);
@@ -147,7 +155,10 @@ LoseScreen.prototype = {
 
     },
     create: function(){
-        var textStart = game.add.text(120, 260, 'You lose!', { fill: '#ffffff',fontSize:30});
+        var textLose = game.add.text(90, 180, 'You lose!', { fill: '#ffffff',fontSize:30});
+        var textStart = game.add.text(65, 260, 'Restart game', { fill: '#ffffff',fontSize:30});
+        textStart.inputEnabled = true;
+        textStart.events.onInputDown.add(changeStateToGameScreen, this);
     },
     update: function(){
 
@@ -183,43 +194,50 @@ function changeStateToGameScreen(){
     game.state.start("gameScreen");
 }
 
+function changeStateToLoseScreen(){
+    game.state.start("loseScreen");
+}
+
 function createBullet() {
 
-    var x = player.x;
+    var x = player.x+20;
     var y = player.y-20;
     var tiro;
     var chance = Math.random() * 100;
 
-    if (chance < 60) {
-        tiro = bullets.create(x, y, 'bullet');
-    } else {
-        tiro = estragadas.create(x, -40, 'fruta_ruim');
-    }
+    tiro = bullets.create(x, y, 'bullet');
+
 
     //tiro.angle = game.rnd.angle();
     //tiro.body.mass = 20;
 
-    game.physics.arcade.accelerateToXY(tiro, x, -50, 100);
+    //tiro.y = player.y-20;
+    //tiro.y += 2;
+    game.physics.arcade.moveToXY(tiro, x, -50, 200);
+    //game.physics.arcade.accelerateToXY(tiro, x, -50, 100);
 
     total++;
-    timer = game.time.now + 2000;
+    timer = game.time.now + 500;
 }
+
 function createEnemy(){
     var x = game.world.randomX;
-    var y = 0;
+    var y = -100;
 
 
-    enemyChrome.create(x, y, 'ship');
+    enemy = enemyOpera.create(x, y, 'enemyOpera');
   
 
     //tiro.angle = game.rnd.angle();
     //tiro.body.mass = 20;
 
+    game.physics.arcade.moveToXY(enemy, x, 500, 150);
     //game.physics.arcade.accelerateToXY(tiro, x, -50, 100);
+    timerEnemy = game.time.now + 1200;
+
 }
 
 function atingiuInimigo(inEnemy, inBullet) {
-    console.log("acertou!!!!");
     total--;
     score++;
 
@@ -229,20 +247,19 @@ function atingiuInimigo(inEnemy, inBullet) {
 
     inEnemy.kill();
     inBullet.kill();
-    createEnemy();
 }
 
-function pegouEstragada(inPlayer, inFruta) {
-    console.log("Rodou!!!!");
+function morreu(inEnemy, inPlayer) {
     total--;
-    score -= 10;
+    //score -= 10;
 
     scoreText.text = 'Score: ' + score;
 
-    inPlayer.body.velocity.y = -20;
+    //inPlayer.body.velocity.y = -20;
 
-    inFruta.kill();
+    inPlayer.kill();
 
+    changeStateToLoseScreen();
 }
 
 function destruirObjetoForaDaTela(objeto) {
