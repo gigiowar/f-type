@@ -3,7 +3,7 @@
   "launch_path": "/index.html",
   "description": "F-type is a mini ship shooter game where the player must survive shooting lasers, and avoid laser of other ships.",
   "orientation": [
-    "landscape"
+    "portrait"
   ],
   "developer": {
     "name": "Giovanni Abate Neto e Marcelo Ribas Molina",
